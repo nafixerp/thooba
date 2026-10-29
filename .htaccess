@@ -1,0 +1,28 @@
+<IfModule mod_rewrite.c>
+    Options -Indexes
+
+    RewriteEngine On
+
+    # Pass the Authorization header through to PHP. Without this every
+    # "Bearer" token is dropped and the API answers "Unauthenticated".
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    RewriteRule ^$ index.php [L]
+
+    RewriteCond $1 !^index\.php$ [NC]
+    RewriteCond public/$1 -f [OR]
+    RewriteCond public/$1 -d
+    RewriteRule ^(.*)$ public/$1 [L]
+
+    RewriteRule ^(.*)$ index.php [L]
+</IfModule>
+
+# Some Apache/PHP builds expose it only under this name.
+<IfModule mod_setenvif.c>
+    SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+</IfModule>
+
+<FilesMatch "^(\.env.*|artisan|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml)$">
+    Require all denied
+</FilesMatch>
